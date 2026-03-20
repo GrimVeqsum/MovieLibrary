@@ -13,6 +13,21 @@ import (
 	"gorm.io/gorm"
 )
 
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	dsn := os.Getenv("DSN")
 	if dsn == "" {
@@ -22,7 +37,6 @@ func main() {
 	var db *gorm.DB
 	var err error
 
-	// Ждём пока Postgres будет готов
 	for i := 0; i < 10; i++ {
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err == nil {
@@ -36,20 +50,20 @@ func main() {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	// Миграция таблиц
 	if err := models.Migrate(db); err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
 
 	movieHandler := &handlers.MovieHandler{DB: db}
 
-	// Маршруты
 	r := mux.NewRouter()
-	r.HandleFunc("/movies", movieHandler.CreateMovie).Methods("POST")
-	r.HandleFunc("/movies", movieHandler.GetMovies).Methods("GET")
-	r.HandleFunc("/movies/{id}", movieHandler.GetMovie).Methods("GET")
-	r.HandleFunc("/movies/{id}", movieHandler.UpdateMovie).Methods("PUT")
-	r.HandleFunc("/movies/{id}", movieHandler.DeleteMovie).Methods("DELETE")
+	r.Use(corsMiddleware)
+
+	r.HandleFunc("/movies", movieHandler.CreateMovie).Methods("POST", "OPTIONS")
+	r.HandleFunc("/movies", movieHandler.GetMovies).Methods("GET", "OPTIONS")
+	r.HandleFunc("/movies/{id}", movieHandler.GetMovie).Methods("GET", "OPTIONS")
+	r.HandleFunc("/movies/{id}", movieHandler.UpdateMovie).Methods("PUT", "OPTIONS")
+	r.HandleFunc("/movies/{id}", movieHandler.DeleteMovie).Methods("DELETE", "OPTIONS")
 
 	log.Println("Movie Service running at :8080")
 	if err := http.ListenAndServe(":8080", r); err != nil {

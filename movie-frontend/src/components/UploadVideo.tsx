@@ -19,7 +19,7 @@ export const UploadVideo: React.FC<Props> = ({ movieId, onUpload }) => {
 
   return (
     <div>
-      <input type="file" accept="video/*" onChange={e => setFile(e.target.files?.[0] || null)} />
+      <input type="file" accept="video/mp4" onChange={e => setFile(e.target.files?.[0] || null)} />
       <button onClick={handleUpload}>Upload Video</button>
     </div>
   );

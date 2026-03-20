@@ -14,7 +14,9 @@ export const MovieForm: React.FC<Props> = ({ onAdd }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await createMovie({ title, director, year });
-    setTitle(""); setDirector(""); setYear(2023);
+    setTitle("");
+    setDirector("");
+    setYear(2023);
     onAdd();
   };
 

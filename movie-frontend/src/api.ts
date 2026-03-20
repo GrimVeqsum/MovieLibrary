@@ -1,4 +1,3 @@
-// src/api.ts
 export interface Movie {
   id: number;
   title: string;
@@ -10,36 +9,49 @@ export interface Movie {
 const API_URL = "http://localhost:8080";
 const VIDEO_URL = "http://localhost:8081";
 
-// Movie Service CRUD
-export async function getMovies(): Promise<Movie[]> {
-  const res = await fetch(`${API_URL}/movies`);
+async function parseJsonSafe<T>(res: Response): Promise<T> {
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `HTTP ${res.status}`);
+  }
   return res.json();
 }
 
-export async function createMovie(movie: Partial<Movie>) {
+export async function getMovies(): Promise<Movie[]> {
+  const res = await fetch(`${API_URL}/movies`);
+  return parseJsonSafe<Movie[]>(res);
+}
+
+export async function createMovie(movie: Partial<Movie>): Promise<Movie> {
   const res = await fetch(`${API_URL}/movies`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(movie),
   });
-  return res.json();
+  return parseJsonSafe<Movie>(res);
 }
 
-export async function updateMovie(id: number, movie: Partial<Movie>) {
+export async function updateMovie(id: number, movie: Partial<Movie>): Promise<Movie> {
   const res = await fetch(`${API_URL}/movies/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(movie),
   });
-  return res.json();
+  return parseJsonSafe<Movie>(res);
 }
 
-export async function deleteMovie(id: number) {
-  await fetch(`${API_URL}/movies/${id}`, { method: "DELETE" });
+export async function deleteMovie(id: number): Promise<void> {
+  const res = await fetch(`${API_URL}/movies/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `HTTP ${res.status}`);
+  }
 }
 
-// Video Service upload
-export async function uploadVideo(movieId: number, file: File) {
+export async function uploadVideo(movieId: number, file: File): Promise<string> {
   const formData = new FormData();
   formData.append("file", file);
 
@@ -47,6 +59,11 @@ export async function uploadVideo(movieId: number, file: File) {
     method: "POST",
     body: formData,
   });
-  const url = await res.text();
-  return url;
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `HTTP ${res.status}`);
+  }
+
+  return res.text();
 }

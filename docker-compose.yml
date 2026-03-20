@@ -13,10 +13,10 @@ services:
     environment:
       MINIO_ROOT_USER: minio
       MINIO_ROOT_PASSWORD: minio123
-    command: server /data
+    command: server /data --console-address ":9001"
     ports:
       - "9000:9000"
-      - "9001:9001" # MinIO Console
+      - "9001:9001"
     volumes:
       - minio_data:/data
 
@@ -41,6 +41,17 @@ services:
       MINIO_ACCESS_KEY: minio
       MINIO_SECRET_KEY: minio123
       MINIO_BUCKET: movies
+
+  frontend:
+    build: ./movie-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - movie-service
+      - video-service
+    volumes:
+      - ./movie-frontend:/app
+      - /app/node_modules
 
 volumes:
   minio_data:
