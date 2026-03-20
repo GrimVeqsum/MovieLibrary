@@ -71,7 +71,7 @@ export const MovieUpload: React.FC<Props> = ({ onSaved }) => {
         video_url: videoUrl,
       });
 
-      setSuccess("Фильм и видео успешно загружены.");
+      setSuccess("Релиз опубликован в каталоге Movienter.");
       resetForm();
       await onSaved();
     } catch (err) {
@@ -86,11 +86,12 @@ export const MovieUpload: React.FC<Props> = ({ onSaved }) => {
   };
 
   return (
-    <section className="card">
+    <section className="card upload-card">
       <div className="card-header">
         <div>
-          <h2>Добавить фильм</h2>
-          <p>Метаданные сохраняются в БД, MP4 загружается в MinIO.</p>
+          <p className="section-kicker">Новый релиз</p>
+          <h2>Загрузить фильм в Movienter</h2>
+          <p>Заполни карточку и прикрепи MP4, чтобы фильм сразу появился в каталоге.</p>
         </div>
       </div>
 
@@ -137,7 +138,7 @@ export const MovieUpload: React.FC<Props> = ({ onSaved }) => {
             required
           />
           <div className="upload-content">
-            <strong>Выбери MP4-файл</strong>
+            <strong>Выбери трейлер или полный фильм в MP4</strong>
             <span>{fileLabel}</span>
           </div>
         </label>
@@ -146,7 +147,7 @@ export const MovieUpload: React.FC<Props> = ({ onSaved }) => {
         {success && <div className="alert success">{success}</div>}
 
         <button className="primary-btn" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Загрузка..." : "Сохранить и загрузить"}
+          {isSubmitting ? "Публикация..." : "Опубликовать релиз"}
         </button>
       </form>
     </section>
