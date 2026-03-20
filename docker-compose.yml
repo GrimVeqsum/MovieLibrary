@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: movieDB
+    ports:
+      - "5432:5432"
+
+  minio:
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    command: server /data
+    ports:
+      - "9000:9000"
+      - "9001:9001" # MinIO Console
+    volumes:
+      - minio_data:/data
+
+  movie-service:
+    build: ./movie-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - minio
+    environment:
+      DSN: "host=postgres user=postgres password=postgres dbname=movieDB port=5432 sslmode=disable"
+
+  video-service:
+    build: ./video-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - minio
+    environment:
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+      MINIO_BUCKET: movies
+
+volumes:
+  minio_data:

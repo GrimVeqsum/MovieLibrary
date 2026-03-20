@@ -1,0 +1,3 @@
+При запущенном Docker: docker-compose up --build -d
+Проверка Movie-Service(PowerShell): curl http://localhost:8080/movies
+Проверка Video-Service(PowerShell):curl http://localhost:8081/uploads/
