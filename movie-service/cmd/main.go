@@ -34,6 +34,11 @@ func main() {
 		dsn = "host=postgres user=postgres password=postgres dbname=movieDB port=5432 sslmode=disable"
 	}
 
+	videoServiceURL := os.Getenv("VIDEO_SERVICE_URL")
+	if videoServiceURL == "" {
+		videoServiceURL = "http://localhost:8081"
+	}
+
 	var db *gorm.DB
 	var err error
 
@@ -54,7 +59,11 @@ func main() {
 		log.Fatal("Failed to migrate database:", err)
 	}
 
-	movieHandler := &handlers.MovieHandler{DB: db}
+	movieHandler := &handlers.MovieHandler{
+		DB:              db,
+		VideoServiceURL: videoServiceURL,
+		HTTPClient:      &http.Client{Timeout: 10 * time.Second},
+	}
 
 	r := mux.NewRouter()
 	r.Use(corsMiddleware)

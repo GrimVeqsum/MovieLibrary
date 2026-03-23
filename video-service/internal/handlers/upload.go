@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -129,4 +130,40 @@ func GetVideo(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Accept-Ranges", "bytes")
 
 	http.ServeContent(w, r, info.Key, info.LastModified, obj)
+}
+
+func DeleteVideo(w http.ResponseWriter, r *http.Request) {
+	objectName := r.PathValue("objectName")
+	if objectName == "" {
+		http.Error(w, "objectName required", http.StatusBadRequest)
+		return
+	}
+
+	client, bucket, err := newMinioClient()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	ctx := r.Context()
+
+	err = client.RemoveObject(ctx, bucket, objectName, minio.RemoveObjectOptions{})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_, statErr := client.StatObject(ctx, bucket, objectName, minio.StatObjectOptions{})
+	if statErr == nil {
+		http.Error(w, "video still exists after delete", http.StatusInternalServerError)
+		return
+	}
+
+	var objectError minio.ErrorResponse
+	if errors.As(statErr, &objectError) && objectError.StatusCode != http.StatusNotFound {
+		http.Error(w, statErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
